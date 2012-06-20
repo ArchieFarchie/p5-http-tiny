@@ -654,7 +654,14 @@ sub write {
             die(qq/Socket closed by remote server: $!\n/);
         }
         elsif ($! != EINTR) {
-            die(qq/Could not write to socket: '$!'\n/);
+            if ($self->{fh}->can('errstr')){
+                my $err = $self->{fh}->errstr();
+                die (qq/Could not read from SSL socket: '$err'\n/) 
+                    unless $err eq IO::Socket::SSL->SSL_WANT_WRITE;
+            } 
+            else {
+                die(qq/Could not write to socket: '$!'\n/);
+            }
         }
     }
     return $off;
@@ -682,7 +689,14 @@ sub read {
             $len -= $r;
         }
         elsif ($! != EINTR) {
-            die(qq/Could not read from socket: '$!'\n/);
+            if ($self->{fh}->can('errstr')){
+                my $err = $self->{fh}->errstr();
+                die (qq/Could not read from SSL socket: '$err'\n/) 
+                    unless $err eq IO::Socket::SSL->SSL_WANT_READ; 
+            } 
+            else {
+                die(qq/Could not read from socket: '$!'\n/);
+            }
         }
     }
     if ($len && !$allow_partial) {
@@ -709,7 +723,14 @@ sub readline {
             last unless $r;
         }
         elsif ($! != EINTR) {
-            die(qq/Could not read from socket: '$!'\n/);
+            if ($self->{fh}->can('errstr')){
+                my $err = $self->{fh}->errstr();
+                die (qq/Could not read from SSL socket: '$err'\n/) 
+                    unless $err eq IO::Socket::SSL->SSL_WANT_READ;
+            }
+            else {
+                die(qq/Could not read from socket: '$!'\n/);
+            }
         }
     }
     die(qq/Unexpected end of stream while looking for line\n/);
