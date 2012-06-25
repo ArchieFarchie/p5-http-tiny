@@ -656,7 +656,7 @@ sub write {
         elsif ($! != EINTR) {
             if ($self->{fh}->can('errstr')){
                 my $err = $self->{fh}->errstr();
-                die (qq/Could not read from SSL socket: '$err'\n/) 
+                die (qq/Could not write to SSL socket: '$err'\n/) 
                     unless $err eq IO::Socket::SSL->SSL_WANT_WRITE;
             } 
             else {
@@ -1008,12 +1008,18 @@ sub _do_timeout {
 sub can_read {
     @_ == 1 || @_ == 2 || die(q/Usage: $handle->can_read([timeout])/ . "\n");
     my $self = shift;
+    if ($self->{fh}->can('errstr') && ($self->{fh}->errstr() eq IO::Socket::SSL->SSL_WANT_READ)){
+        return 1;
+    }
     return $self->_do_timeout('read', @_)
 }
 
 sub can_write {
     @_ == 1 || @_ == 2 || die(q/Usage: $handle->can_write([timeout])/ . "\n");
     my $self = shift;
+    if ($self->{fh}->can('errstr') && ($self->{fh}->errstr() eq IO::Socket::SSL->SSL_WANT_WRITE)){
+        return 1;
+    }
     return $self->_do_timeout('write', @_)
 }
 
